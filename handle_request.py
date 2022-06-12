@@ -126,11 +126,15 @@ class RetrieveSkills:
 class RetrieveContactInformation:
     def __init__(self, attached_file=None, username=None, text=None):
         if not text:
-            text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
+            self.text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
         else:
-            text = FileManager(initiated=True).set_clean_text(text=text)
+            self.text = FileManager(initiated=True).set_clean_text(text=text)
 
+    def get_email(self):
+        email_list = []
+        emailRegex = re.compile(r'''([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))''', re.VERBOSE)
+        email_groups = emailRegex.findall(self.text)
+        for group in email_groups:
+            email_list.append(group[0])
+        return email_list
 
-
-
-RetrieveContactInformation(text=FileManager(username="gigum", attached_file="./resume.pdf").read_file())
