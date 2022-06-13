@@ -12,8 +12,8 @@ from pdfminer.pdfparser import PDFParser
 
 class EMSIAPIManagement:
     def __init__(self):
-        __CLIENT_ID = "8tp0hqx71y1dwuql"
-        __CLIENT_SECRET = "gpfIT9Sv"
+        __CLIENT_ID = ""
+        __CLIENT_SECRET = ""
         url = "https://auth.emsicloud.com/connect/token"
 
         payload = f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
