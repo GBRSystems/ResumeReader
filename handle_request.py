@@ -16,7 +16,9 @@ class EMSIAPIManagement:
         __CLIENT_SECRET = ""
         url = "https://auth.emsicloud.com/connect/token"
 
-        payload = f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
+        payload = (
+            f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
+        )
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         response = requests.request("POST", url, data=payload, headers=headers)
         time.sleep(2)
@@ -139,7 +141,5 @@ class RetrieveContactInformation:
         return email_list
 
     def get_phones(self):
-        number = re.search(r'((\d{2,4}\s){4})', self.text).group()
+        number = re.search(r'(\d{2,4})(\s|\S){4}', self.text).group()
         return number
-
-
