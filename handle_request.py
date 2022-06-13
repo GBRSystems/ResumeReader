@@ -143,4 +143,3 @@ class RetrieveContactInformation:
         return number
 
 
-RetrieveContactInformation(attached_file="./resume.pdf", username="gigum", text=None).get_phones()
