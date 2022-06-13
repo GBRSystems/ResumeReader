@@ -68,7 +68,7 @@ class FileManager:
             for page in PDFPage.create_pages(doc):
                 interpreter.process_page(page)
 
-        file_temp = open(f'./Tempary_Files/temp_cv_{self.username}.txt', 'w', encoding="utf-8")
+        file_temp = open(f'./temp_files/temp_cv_{self.username}.txt', 'w', encoding="utf-8")
         text = self.clean_text(output_string.getvalue())
         file_temp.write(text)
 
@@ -82,7 +82,7 @@ class FileManager:
                 raise Exception("Need username and file to process")
 
     def read_file(self):
-        with open(f"./Tempary_Files/temp_cv_{self.username}.txt", "r", encoding="utf-8") as txt_file:
+        with open(f"./temp_files/temp_cv_{self.username}.txt", "r", encoding="utf-8") as txt_file:
             return txt_file.read()
 
     @staticmethod
@@ -138,3 +138,9 @@ class RetrieveContactInformation:
             email_list.append(group[0])
         return email_list
 
+    def get_phones(self):
+        number = re.search(r'((\d{2,4}\s){4})', self.text).group()
+        return number
+
+
+RetrieveContactInformation(attached_file="./resume.pdf", username="gigum", text=None).get_phones()
