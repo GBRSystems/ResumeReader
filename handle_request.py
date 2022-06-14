@@ -1,3 +1,4 @@
+import json
 import re
 import time
 from io import StringIO
@@ -12,8 +13,8 @@ from pdfminer.pdfparser import PDFParser
 
 class EMSIAPIManagement:
     def __init__(self):
-        __CLIENT_ID = ""
-        __CLIENT_SECRET = ""
+        __CLIENT_ID = "15vr6i8p2mx92c09"
+        __CLIENT_SECRET = "VSO1EWcM"
         url = "https://auth.emsicloud.com/connect/token"
 
         payload = (
@@ -89,7 +90,7 @@ class FileManager:
 
     @staticmethod
     def clean_text(output_string):
-        text = re.sub('[^A-Za-z0-9]+', ' ', output_string)
+        text = re.sub('[^A-Za-z0-9@.]+', ' ', output_string)
         text = text.replace('\n', '\\n').replace('\t', '\\t')
         return text
 
@@ -124,6 +125,9 @@ class RetrieveSkills:
             skill_list.append(skill.get("skill").get("name"))
         return skill_list
 
+    def retrieve_cleaned_skills(self):
+        pass
+
 
 class RetrieveContactInformation:
     def __init__(self, attached_file=None, username=None, text=None):
@@ -137,9 +141,39 @@ class RetrieveContactInformation:
         emailRegex = re.compile(r'''([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))''', re.VERBOSE)
         email_groups = emailRegex.findall(self.text)
         for group in email_groups:
-            email_list.append(group[0])
-        return email_list
+            email_list.append(group)
+        if email_list:
+            email = email_list[0][0]
+            return email
+        else:
+            return None
 
     def get_phones(self):
-        number = re.search(r'(\d{2,4})(\s|\S){4}', self.text).group()
-        return number
+        pass
+
+    def get_experience(self):
+        pass
+
+
+class ReturnCollectedDataSet:
+    def __init__(self, attached_file=None, username=None, text=None):
+        self.username = username
+        self.skill_dictionary = (
+            RetrieveSkills(attached_file=attached_file, username=username, text=text).retrieve_skills()
+        )
+        self.contact_phone = (
+            RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_phones()
+        )
+        self.contact_emails = (
+            RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_email()
+        )
+
+    def collected_data_set(self):
+        data_json = (
+            "{{'user_name':'{0}', 'phone':'{2}', 'email':'{3}','skills':'{1}'}}".format(
+                self.username, self.skill_dictionary, self.contact_phone, self.contact_emails)
+        )
+        return json.loads(data_json)
+
+
+ReturnCollectedDataSet(attached_file="resume.pdf", username="test").collected_data_set()
