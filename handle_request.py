@@ -151,7 +151,7 @@ class RetrieveContactInformation:
     def get_phones(self):
         pass
 
-    def get_experience(self):
+    def get_experience_education(self):
         pass
 
     def get_address(self):
