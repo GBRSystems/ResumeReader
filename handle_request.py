@@ -154,6 +154,9 @@ class RetrieveContactInformation:
     def get_experience(self):
         pass
 
+    def get_address(self):
+        pass
+
 
 class ReturnCollectedDataSet:
     def __init__(self, attached_file=None, username=None, text=None):
