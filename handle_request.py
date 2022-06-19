@@ -164,6 +164,8 @@ class ReturnCollectedDataSet:
         self.skill_dictionary = (
             RetrieveSkills(attached_file=attached_file, username=username, text=text).retrieve_skills()
         )
+        if not self.skill_dictionary:
+            self.skill_dictionary = RetrieveSkillsCV(attached_file=attached_file, username=username, text=text)
         self.contact_phone = (
             RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_phones()
         )
@@ -176,7 +178,9 @@ class ReturnCollectedDataSet:
             "{{'user_name':'{0}', 'phone':'{2}', 'email':'{3}','skills':'{1}'}}".format(
                 self.username, self.skill_dictionary, self.contact_phone, self.contact_emails)
         )
-        return json.loads(data_json)
+        return data_json
 
 
-ReturnCollectedDataSet(attached_file="resume.pdf", username="test").collected_data_set()
+class RetrieveSkillsCV:
+    def __init__(self, attached_file=None, username=None, text=None):
+        pass
