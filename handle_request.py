@@ -98,15 +98,16 @@ class FileManager:
 class RetrieveSkills:
     def __init__(self, attached_file=None, username=None, language="en", text=None):
         api_call = EMSIAPIManagement()
+        self.username = username
         if EMSIAPIManagement().get_api_status():
             self.token = api_call.access_token()
             url = "https://emsiservices.com/skills/versions/latest/extract"
             querystring = {"language": f"{language}"}
             if text:
-                text = FileManager(initiated=True).set_clean_text(text=text)
+                self.text = FileManager(initiated=True).set_clean_text(text=text)
             else:
-                text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
-            payload = '{\"text\": \"' + text + '\", \"confidenceThreshold\": 0.6}'
+                self.text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
+            payload = '{\"text\": \"' + self.text + '\", \"confidenceThreshold\": 0.6}'
             headers = {
                 'Authorization': f"Bearer {self.token}",
                 'Content-Type': "application/json",
@@ -117,7 +118,10 @@ class RetrieveSkills:
             raise Exception("Unable to connect to APIs")
 
     def retrieve_skills(self):
-        return self.response.json().get("data")
+        if self.response.json().get("data"):
+            return self.response.json().get("data")
+        else:
+            RetrieveSkillsCV(username=self.username, text=self.text).retrieve_data()
 
     def all_skill_names(self):
         skill_list = []
@@ -164,8 +168,6 @@ class ReturnCollectedDataSet:
         self.skill_dictionary = (
             RetrieveSkills(attached_file=attached_file, username=username, text=text).retrieve_skills()
         )
-        if not self.skill_dictionary:
-            self.skill_dictionary = RetrieveSkillsCV(attached_file=attached_file, username=username, text=text)
         self.contact_phone = (
             RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_phones()
         )
@@ -182,5 +184,8 @@ class ReturnCollectedDataSet:
 
 
 class RetrieveSkillsCV:
-    def __init__(self, attached_file=None, username=None, text=None):
+    def __init__(self, username=None, text=None):
+        pass
+
+    def retrieve_data(self):
         pass
