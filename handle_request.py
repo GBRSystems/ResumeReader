@@ -1,4 +1,3 @@
-import json
 import re
 import time
 from io import StringIO
@@ -185,7 +184,14 @@ class ReturnCollectedDataSet:
 
 class RetrieveSkillsCV:
     def __init__(self, username=None, text=None):
-        pass
+        if username:
+            self.username = username
+            self.text = text
+        else:
+            raise Exception("Need username to process")
 
     def retrieve_data(self):
         pass
+
+
+
