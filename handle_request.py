@@ -120,7 +120,7 @@ class RetrieveSkills:
         if self.response.json().get("data"):
             return self.response.json().get("data")
         else:
-            RetrieveSkillsCV(username=self.username, text=self.text).retrieve_data()
+            pass
 
     def all_skill_names(self):
         skill_list = []
@@ -154,44 +154,13 @@ class RetrieveContactInformation:
     def get_phones(self):
         pass
 
-    def get_experience_education(self):
-        pass
-
     def get_address(self):
         pass
 
 
-class ReturnCollectedDataSet:
-    def __init__(self, attached_file=None, username=None, text=None):
-        self.username = username
-        self.skill_dictionary = (
-            RetrieveSkills(attached_file=attached_file, username=username, text=text).retrieve_skills()
-        )
-        self.contact_phone = (
-            RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_phones()
-        )
-        self.contact_emails = (
-            RetrieveContactInformation(attached_file=attached_file, username=username, text=text).get_email()
-        )
-
-    def collected_data_set(self):
-        data_json = (
-            "{{'user_name':'{0}', 'phone':'{2}', 'email':'{3}','skills':'{1}'}}".format(
-                self.username, self.skill_dictionary, self.contact_phone, self.contact_emails)
-        )
-        return data_json
 
 
-class RetrieveSkillsCV:
-    def __init__(self, username=None, text=None):
-        if username:
-            self.username = username
-            self.text = text
-        else:
-            raise Exception("Need username to process")
 
-    def retrieve_data(self):
-        pass
 
 
 
