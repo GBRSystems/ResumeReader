@@ -16,17 +16,15 @@ class EMSIAPIManagement:
         __CLIENT_SECRET = "VSO1EWcM"
         url = "https://auth.emsicloud.com/connect/token"
 
-        payload = (
-            f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
-        )
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        payload = f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
         response = requests.request("POST", url, data=payload, headers=headers)
         time.sleep(2)
         self.__access_token = response.json().get("access_token")
 
     def _api_status(self) -> bool:
         url = "https://emsiservices.com/titles/status"
-        headers = {'Authorization': f'Bearer {self.__access_token}'}
+        headers = {"Authorization": f"Bearer {self.__access_token}"}
         response = requests.request("GET", url, headers=headers)
         return response.json().get("data").get("healthy")
 
@@ -48,20 +46,20 @@ class FileManager:
         if not initiated:
             self.attached_file_location = attached_file
             self.username = username
-            if self.attached_file_location:
+            if self.attached_file_location and username:
                 if self.attached_file_location[-4:] == ".pdf":
-                    self.work_file()
+                    self.__work_file()
             else:
                 self.username = input("\nAdd your username here? \n")
                 self.attached_file_location = input("\nAdd your PDF file here? \n")
                 if self.attached_file_location[-4:] == ".pdf":
-                    self.work_file()
+                    self.__work_file()
                 else:
                     raise Exception("Only PDF allowed")
 
-    def work_file(self):
+    def __work_file(self):
         output_string = StringIO()
-        with open(self.attached_file_location, 'rb') as in_file:
+        with open(self.attached_file_location, "rb") as in_file:
             parser = PDFParser(in_file)
             doc = PDFDocument(parser)
             resource_manager = PDFResourceManager()
@@ -70,27 +68,31 @@ class FileManager:
             for page in PDFPage.create_pages(doc):
                 interpreter.process_page(page)
 
-        file_temp = open(f'./temp_files/temp_cv_{self.username}.txt', 'w', encoding="utf-8")
-        text = self.clean_text(output_string.getvalue())
+        file_temp = open(
+            f"./temp_files/temp_cv_{self.username}.txt", "w+", encoding="utf-8"
+        )
+        text = self.__set_clean_text(output_string.getvalue())
         file_temp.write(text)
 
-    def set_clean_text(self, text=None):
+    def __set_clean_text(self, text=None):
         if text:
-            return self.clean_text(text)
+            return self.__clean_text(text)
         else:
             if self.attached_file_location and self.username:
-                return self.clean_text(self.read_file())
+                return self.__clean_text(self.read_file())
             else:
                 raise Exception("Need username and file to process")
 
-    def read_file(self):
-        with open(f"./temp_files/temp_cv_{self.username}.txt", "r", encoding="utf-8") as txt_file:
+    def read_file(self, file_path=None):
+        if not file_path:
+            file_path = f"./temp_files/temp_cv_{self.username}.txt"
+        with open(file_path, "r", encoding="utf-8") as txt_file:
             return txt_file.read()
 
     @staticmethod
-    def clean_text(output_string):
-        text = re.sub('[^A-Za-z0-9@.]+', ' ', output_string)
-        text = text.replace('\n', '\\n').replace('\t', '\\t')
+    def __clean_text(output_string):
+        text = re.sub("[^A-Za-z0-9@.]+", " ", output_string)
+        text = text.replace("\n", "\\n").replace("\t", "\\t")
         return text
 
 
@@ -105,14 +107,21 @@ class RetrieveSkills:
             if text:
                 self.text = FileManager(initiated=True).set_clean_text(text=text)
             else:
-                self.text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
-            payload = '{\"text\": \"' + self.text + '\", \"confidenceThreshold\": 0.6}'
+                self.text = FileManager(
+                    attached_file=attached_file, username=username, initiated=False
+                ).set_clean_text()
+            payload = '{"text": "' + self.text + '", "confidenceThreshold": 0.6}'
             headers = {
-                'Authorization': f"Bearer {self.token}",
-                'Content-Type': "application/json",
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
             }
-            self.response = requests.request("POST", url, data=payload.encode('utf-8'), headers=headers,
-                                             params=querystring)
+            self.response = requests.request(
+                "POST",
+                url,
+                data=payload.encode("utf-8"),
+                headers=headers,
+                params=querystring,
+            )
         else:
             raise Exception("Unable to connect to APIs")
 
@@ -135,13 +144,17 @@ class RetrieveSkills:
 class RetrieveContactInformation:
     def __init__(self, attached_file=None, username=None, text=None):
         if not text:
-            self.text = FileManager(attached_file=attached_file, username=username, initiated=False).set_clean_text()
+            self.text = FileManager(
+                attached_file=attached_file, username=username, initiated=False
+            ).set_clean_text()
         else:
             self.text = FileManager(initiated=True).set_clean_text(text=text)
 
     def get_email(self):
         email_list = []
-        emailRegex = re.compile(r'''([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))''', re.VERBOSE)
+        emailRegex = re.compile(
+            r"""([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))""", re.VERBOSE
+        )
         email_groups = emailRegex.findall(self.text)
         for group in email_groups:
             email_list.append(group)
@@ -158,9 +171,4 @@ class RetrieveContactInformation:
         pass
 
 
-
-
-
-
-
-
+FileManager(attached_file="resume.pdf")
