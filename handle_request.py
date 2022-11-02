@@ -40,6 +40,37 @@ class EMSIAPIManagement:
         else:
             return False
 
+    def get_data(self, language="en", text_input=None):
+        if self.get_api_status() and text_input:
+            self.token = self.access_token()
+            url = "https://emsiservices.com/skills/versions/latest/extract"
+            querystring = {"language": f"{language}"}
+            payload = '{"text": "' + text_input + '", "confidenceThreshold": 0.6}'
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+            }
+            self.response = requests.request(
+                "POST",
+                url,
+                data=payload.encode("utf-8"),
+                headers=headers,
+                params=querystring,
+            )
+            if self.response.json().get("data"):
+                return self.response.json().get("data")
+            else:
+                return None
+
+    def all_skill_names(self):
+        skill_list = []
+        if self.get_data():
+            for skill in self.get_data():
+                skill_list.append(skill.get("skill").get("name"))
+            return skill_list
+        else:
+            return None
+
 
 class FileManager:
     def __init__(self, attached_file=None, username=None, initiated=False):
@@ -84,10 +115,14 @@ class FileManager:
                 raise Exception("Need username and file to process")
 
     def read_file(self, file_path=None):
-        if not file_path:
+        if not file_path and self.username:
             file_path = f"./temp_files/temp_cv_{self.username}.txt"
-        with open(file_path, "r", encoding="utf-8") as txt_file:
-            return txt_file.read()
+        try:
+            with open(file_path, "r", encoding="utf-8") as txt_file:
+                return txt_file.read()
+        except Exception as e:
+            print(e)
+            return None
 
     @staticmethod
     def __clean_text(output_string):
@@ -97,72 +132,26 @@ class FileManager:
 
 
 class RetrieveSkills:
-    def __init__(self, attached_file=None, username=None, language="en", text=None):
-        api_call = EMSIAPIManagement()
-        self.username = username
-        if EMSIAPIManagement().get_api_status():
-            self.token = api_call.access_token()
-            url = "https://emsiservices.com/skills/versions/latest/extract"
-            querystring = {"language": f"{language}"}
-            if text:
-                self.text = FileManager(initiated=True).set_clean_text(text=text)
-            else:
-                self.text = FileManager(
-                    attached_file=attached_file, username=username, initiated=False
-                ).set_clean_text()
-            payload = '{"text": "' + self.text + '", "confidenceThreshold": 0.6}'
-            headers = {
-                "Authorization": f"Bearer {self.token}",
-                "Content-Type": "application/json",
-            }
-            self.response = requests.request(
-                "POST",
-                url,
-                data=payload.encode("utf-8"),
-                headers=headers,
-                params=querystring,
-            )
-        else:
-            raise Exception("Unable to connect to APIs")
-
-    def retrieve_skills(self):
-        if self.response.json().get("data"):
-            return self.response.json().get("data")
-        else:
-            pass
-
-    def all_skill_names(self):
-        skill_list = []
-        for skill in self.retrieve_skills():
-            skill_list.append(skill.get("skill").get("name"))
-        return skill_list
-
-    def retrieve_cleaned_skills(self):
-        pass
+    pass
 
 
 class RetrieveContactInformation:
     def __init__(self, attached_file=None, username=None, text=None):
-        if not text:
-            self.text = FileManager(
-                attached_file=attached_file, username=username, initiated=False
-            ).set_clean_text()
-        else:
-            self.text = FileManager(initiated=True).set_clean_text(text=text)
+        pass
 
-    def get_email(self):
+    def get_email(self, text_input=None):
         email_list = []
         emailRegex = re.compile(
             r"""([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))""", re.VERBOSE
         )
-        email_groups = emailRegex.findall(self.text)
-        for group in email_groups:
-            email_list.append(group)
-        if email_list:
-            email = email_list[0][0]
-            return email
-        else:
-            return None
+        if text_input:
+            email_groups = emailRegex.findall(text_input)
+            for group in email_groups:
+                email_list.append(group)
+            if email_list:
+                return email_list[0][0]
+            else:
+                return None
 
     def get_phones(self):
         pass
