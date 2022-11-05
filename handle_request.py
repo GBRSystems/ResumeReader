@@ -132,7 +132,8 @@ class FileManager:
 
 
 class RetrieveSkills:
-    pass
+    def __init__(self):
+        pass
 
 
 class RetrieveContactInformation:
