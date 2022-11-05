@@ -154,8 +154,12 @@ class RetrieveContactInformation:
             else:
                 return None
 
-    def get_phones(self):
-        pass
+    def get_phones(self, text):
+        reg = re.compile(
+            r"[\+\d]?(\d{2,3}[-\.\s]??\d{2,3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})"
+        )
+        phone_no = re.findall(reg, text)
+        return phone_no
 
     def get_address(self):
         pass
