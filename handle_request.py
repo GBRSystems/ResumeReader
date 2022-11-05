@@ -8,6 +8,10 @@ from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
+from pdf2image import convert_from_path
+import pytesseract
+from pytesseract import image_to_string
+pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
 
 class EMSIAPIManagement:
@@ -98,12 +102,19 @@ class FileManager:
             interpreter = PDFPageInterpreter(resource_manager, device)
             for page in PDFPage.create_pages(doc):
                 interpreter.process_page(page)
-
+        text = self.__set_clean_text(output_string.getvalue())
         file_temp = open(
             f"./temp_files/temp_cv_{self.username}.txt", "w+", encoding="utf-8"
         )
-        text = self.__set_clean_text(output_string.getvalue())
-        file_temp.write(text)
+        if text and len(text)>2:
+            file_temp.write(text)
+        else:
+            images = convert_from_path(self.attached_file_location)
+            final_text = ""
+            for pg, img in enumerate(images):
+                final_text += image_to_string(img)
+            text = self.__set_clean_text(final_text)
+            file_temp.write(text)
 
     def __set_clean_text(self, text=None):
         if text:
@@ -131,6 +142,8 @@ class FileManager:
         return text
 
 
+
+
 class RetrieveSkills:
     def __init__(self):
         pass
@@ -143,7 +156,7 @@ class RetrieveContactInformation:
     def get_email(self, text_input=None):
         email_list = []
         emailRegex = re.compile(
-            r"""([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))""", re.VERBOSE
+            r"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))", re.VERBOSE
         )
         if text_input:
             email_groups = emailRegex.findall(text_input)
@@ -165,4 +178,4 @@ class RetrieveContactInformation:
         pass
 
 
-FileManager(attached_file="resume.pdf")
+FileManager(attached_file="resume_scanned.pdf", username="scanned")
