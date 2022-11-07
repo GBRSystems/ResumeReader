@@ -15,16 +15,20 @@ import os.path
 import phonenumbers
 from phonenumbers import timezone
 from datetime import datetime
+import spacy
+from spacy.matcher import PhraseMatcher
+from skillNer.general_params import SKILL_DB
+from skillNer.skill_extractor_class import SkillExtractor
 
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
 
-class EMSIAPIManagement:
-    def __init__(self):
+class _EMSIAPIManagement:
+    def __init__(self, client_id="15vr6i8p2mx92c09", client_secret="VSO1EWcM"):
         self.response = None
         self.token = None
-        __CLIENT_ID = "15vr6i8p2mx92c09"
-        __CLIENT_SECRET = "VSO1EWcM"
+        __CLIENT_ID = client_id
+        __CLIENT_SECRET = client_secret
         url = "https://auth.emsicloud.com/connect/token"
         payload = f"client_id={__CLIENT_ID}&client_secret={__CLIENT_SECRET}&grant_type=client_credentials&scope=emsi_open"
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -82,23 +86,27 @@ class EMSIAPIManagement:
             return None
 
 
-class FileManager:
-    def __init__(self, attached_file=None, username=None, initiated=False):
-        if not initiated:
+class _FileManager:
+    def __init__(
+        self, attached_file=None, username=None, initiated=False, verification=False
+    ):
+        if not verification:
             self.attached_file_location = attached_file
             self.username = username
-            if self.attached_file_location and username:
+            if self.attached_file_location:
                 if self.attached_file_location[-4:] == ".pdf":
-                    self.__work_file()
-            else:
+                    self._work_file()
+            elif initiated:
                 self.username = input("\nAdd your username here? \n")
                 self.attached_file_location = input("\nAdd your PDF file here? \n")
                 if self.attached_file_location[-4:] == ".pdf":
-                    self.__work_file()
+                    self._work_file()
                 else:
                     raise Exception("Only PDF allowed")
+            else:
+                raise Exception("Please input sufficient data to process")
 
-    def __work_file(self):
+    def _work_file(self):
         output_string = StringIO()
         with open(self.attached_file_location, "rb") as in_file:
             parser = PDFParser(in_file)
@@ -108,7 +116,7 @@ class FileManager:
             interpreter = PDFPageInterpreter(resource_manager, device)
             for page in PDFPage.create_pages(doc):
                 interpreter.process_page(page)
-        text = self.__set_clean_text(output_string.getvalue())
+        text = self._set_clean_text(output_string.getvalue())
         if not self.username or self.username == "":
             self.username = datetime.now()
         file_temp = open(
@@ -116,14 +124,14 @@ class FileManager:
         )
         if text and len(text) > 2:
             file_temp.write(text)
-            return text, self.username
+            return text, f"{self.username}.txt"
         elif text:
             try:
                 images = convert_from_path(self.attached_file_location)
                 final_text = ""
                 for pg, img in enumerate(images):
                     final_text += image_to_string(img)
-                text = self.__set_clean_text(final_text)
+                text = self._set_clean_text(final_text)
                 file_temp.write(text)
                 return text, self.username
             except Exception as e:
@@ -132,12 +140,12 @@ class FileManager:
         else:
             return None
 
-    def __set_clean_text(self, text=None):
+    def _set_clean_text(self, text=None):
         if text:
-            return self.__clean_text(text)
+            return self._clean_text(text)
         else:
             if self.attached_file_location and self.username:
-                return self.__clean_text(self.read_file())
+                return self._clean_text(self.read_file())
             else:
                 raise Exception("Need username and file to process")
 
@@ -152,15 +160,62 @@ class FileManager:
             return None
 
     @staticmethod
-    def __clean_text(output_string):
+    def _clean_text(output_string):
         text = re.sub("[^A-Za-z0-9@.]+", " ", output_string)
         text = text.replace("\n", "\\n").replace("\t", "\\t")
         return text
 
+    @staticmethod
+    def is_pdf(file_path=None):
+        if file_path:
+            if file_path[-4:] in [".pdf", ".txt"]:
+                return True
+            else:
+                return False
+        else:
+            return False
+
 
 class RetrieveSkills:
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        client_id=None,
+        client_secret=None,
+        data_test=None,
+        username=None,
+        file_path=None,
+        language="en",
+    ):
+
+        nlp = spacy.load("en_core_web_lg")
+        skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
+        self.file_path = file_path
+        self.data_test = data_test
+        self.username = username
+        self.file_path = file_path
+        self.language = language
+        if not self.data_test:
+            attached = (
+                self.file_path
+                if _FileManager(verification=True).is_pdf(self.file_path)
+                else None
+            )
+            self.data_text = _FileManager(
+                attached_file=attached, username=self.username, initiated=False
+            ).read_file(file_path=self.file_path)
+        if self.data_test:
+            self.skills_set = skill_extractor.annotate(self.data_text)
+            if not self.skills_set:
+                if client_id is not None and client_secret is not None:
+                    self.skills_set = _EMSIAPIManagement(
+                        client_id=client_id, client_secret=client_secret
+                    ).get_data(language=self.language, text_input=self.data_test)
+
+    def get_skills(self):
+        if self.skills_set:
+            return self.skills_set
+        else:
+            return None
 
 
 class RetrieveContactInformation:
@@ -221,4 +276,4 @@ def _read_file(file_path):
         return None
 
 
-FileManager(attached_file="resume.pdf", username="scanned")
+_FileManager(attached_file="resume.pdf", username="scanned")
