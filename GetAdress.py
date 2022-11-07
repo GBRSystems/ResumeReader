@@ -10,6 +10,7 @@ text = "Software Engineer with over 10+ years of experience in the Healthcare do
 # regexp = "[0-9]{1,3} .+, .+, [A-Z]{2} [0-9]{5}"
 # address = re.findall("([0-9]{1,5} .+, .+, [A-Z]{1,20})", text)
 # address = re.findall("([0-9]{1,5} .+, [A-z])", text)
-address = re.compile(r'\d{1,7}( \w+){1,6} (nd|st|street|ave|avenue|ln|lane), (apt|unit|apartment)[\., ]+.*[\. ,]+(NY|AZ|CA|CO|NH)[\. ,]\d{5}')
+address = re.compile(r'\d{1,7}( \w+){1,6} (nd|st|street|ave|avenue|ln|lane), (apt|unit|apartment)[\., ]+.*[\. ,'
+                     r']+(NY|AZ|CA|CO|NH)[\. ,]\d{5}')
 address_text = re.findall(address, text)
 print(address_text)
