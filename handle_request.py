@@ -22,7 +22,6 @@ from skillNer.skill_extractor_class import SkillExtractor
 
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
-
 class _EMSIAPIManagement:
     def __init__(self, client_id="15vr6i8p2mx92c09", client_secret="VSO1EWcM"):
         self.response = None
