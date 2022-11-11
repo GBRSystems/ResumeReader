@@ -19,8 +19,10 @@ import spacy
 from spacy.matcher import PhraseMatcher
 from skillNer.general_params import SKILL_DB
 from skillNer.skill_extractor_class import SkillExtractor
+import pypostalwin
 
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
+
 
 class _EMSIAPIManagement:
     def __init__(self, client_id="15vr6i8p2mx92c09", client_secret="VSO1EWcM"):
@@ -218,27 +220,27 @@ class RetrieveSkills:
 
 
 class RetrieveContactInformation:
-    def __init__(self, attached_file=None, username=None, text=None):
+    def __init__(self, attached_file=None, username=None, text=None, region_code="US"):
         self.username = username
         self.attached_file = attached_file
         self.text = text
         self.email = None
         self.phone = None
         self.address = None
+        self.region_code = region_code
         status, path_type, path = _check_file(
             username=self.username, file_path=self.attached_file
         )
         if status and path:
             self.file_temp = _read_file(path)
 
-    @staticmethod
-    def get_email(text_input=None):
+    def get_email(self):
         email_list = []
         email_regex = re.compile(
             r"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,4}))", re.VERBOSE
         )
-        if text_input:
-            email_groups = email_regex.findall(text_input)
+        if self.text:
+            email_groups = email_regex.findall(self.text)
             for group in email_groups:
                 email_list.append(group)
             if email_list:
@@ -246,15 +248,22 @@ class RetrieveContactInformation:
             else:
                 return None
 
-    @staticmethod
-    def get_phones(text, region_code="US"):
+    def get_phones(self):
         phone_numbers = {}
-        for match in phonenumbers.PhoneNumberMatcher(text, region_code):
+        for match in phonenumbers.PhoneNumberMatcher(self.text, self.region_code):
             phone_numbers[match] = timezone.time_zones_for_number(match.number)
         return phone_numbers
 
     def get_address(self):
-        pass
+        parser = pypostalwin.AddressParser()
+        return parser.runParser(self.text)
+
+    def get_contact_information(self):
+        if self.file_temp:
+            self.email = self.get_email()
+            self.phone = self.get_phones()
+            self.address = self.get_address()
+        return self.email, self.phone, self.address
 
 
 def _check_file(username=None, file_path=None):
