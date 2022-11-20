@@ -227,12 +227,14 @@ class RetrieveContactInformation:
         self.email = None
         self.phone = None
         self.address = None
+        self.file_temp = None
         self.region_code = region_code
-        status, path_type, path = _check_file(
-            username=self.username, file_path=self.attached_file
-        )
-        if status and path:
-            self.file_temp = _read_file(path)
+        if self.username and self.attached_file:
+            status, path_type, path = _check_file(
+                username=self.username, file_path=self.attached_file
+            )
+            if status and path:
+                self.file_temp = _read_file(path)
 
     def get_email(self):
         email_list = []
@@ -259,10 +261,9 @@ class RetrieveContactInformation:
         return parser.runParser(self.text)
 
     def get_contact_information(self):
-        if self.file_temp:
-            self.email = self.get_email()
-            self.phone = self.get_phones()
-            self.address = self.get_address()
+        self.email = self.get_email()
+        self.phone = self.get_phones()
+        self.address = self.get_address()
         return self.email, self.phone, self.address
 
 
@@ -282,6 +283,3 @@ def _read_file(file_path):
     except Exception as e:
         print(e)
         return None
-
-
-_FileManager(attached_file="resume.pdf", username="scanned")
