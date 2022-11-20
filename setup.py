@@ -6,6 +6,7 @@ setup(
     url="https://github.com/gigumbrajaguru/ResumeReader",
     author="Gigum Rajaguru",
     author_email="gigumbrajaguru@gmail.com",
+    packages=[],
     # Needed for dependencies
     install_requires=[
         "asttokens",
@@ -78,9 +79,9 @@ setup(
     version="0.1",
     # The license can be anything you like
     license="MIT",
-    description="An example of a python package from pre-existing code",
+    description="",
     # We will also need a readme eventually (there will be a warning)
-    long_description=open("README.md").read(),
+    long_description="",
 )
 
 if __name__ == "__main__":
